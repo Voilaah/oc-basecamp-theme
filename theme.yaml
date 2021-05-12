@@ -1,0 +1,8 @@
+name: Basecamp
+description: 'Basecamp operation'
+author: voilaah
+homepage: 'https://voilaah.com'
+author_code: voilaah
+code: voilaah-basecamp
+parent: rainlab-vanilla
+database: '0'

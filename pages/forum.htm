@@ -1,0 +1,17 @@
+url = "/forum"
+layout = "default"
+title = "Basecamp"
+description = "The main Basecamp page with all the projects."
+hidden = 0
+
+[forumChannels]
+memberPage = 404
+channelPage = "forum/channel"
+topicPage = "forum/topic"
+includeStyles = 1
+
+[session]
+security = "user"
+redirect = "account"
+==
+{% component 'forumChannels' %}

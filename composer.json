@@ -1,0 +1,8 @@
+{
+    "name": "voilaah/voilaah-basecamp-theme",
+    "type": "october-theme",
+    "description": "Basecamp operation",
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
