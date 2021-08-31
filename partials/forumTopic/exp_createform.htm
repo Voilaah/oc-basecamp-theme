@@ -1,0 +1,144 @@
+{{ form_open({ request: 'onCreate', 'id':'forum--form_new-user-content' }) }}
+
+    <div class="form-group">
+        <label for="topicSubject" class="control-label">Subject</label>
+        <input
+            id="topicSubject"
+            name="subject"
+            type="text"
+            class="form-control"
+            value="{{ post('subject') }}" />
+    </div>
+
+    <div class="form-group">
+        <label for="topicContent" class="control-label">Content</label>
+         <div id="user-contribute-content--post-content" style="height: 25vh;">
+            {{ post ? post.content_html|raw : '' }}
+        </div>
+        {# <textarea
+            id="topicContent"
+            name="content"
+            rows="8"
+            type="text"
+            class="form-control">{{ post('content') }}</textarea>
+        <span class="help-block">You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a> syntax.</span> #}
+    </div>
+
+    <div class="form-group post-buttons">
+        <button type="submit" class="btn btn-primary btn-lg">Post this topic</button>
+        {% if returnUrl %}
+            <a class="btn btn-link btn-lg" href="{{ returnUrl }}">Cancel</a>
+        {% endif %}
+    </div>
+
+    <input type="hidden" name="channel" value="{{ channel.id }}" />
+
+{{ form_close() }}
+
+{% put scripts %}
+    <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    {# --prepare editors-- #}
+    <script>
+        var toolbarOptions = [
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            //[{ 'header': 1 }, { 'header': 2 }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['link', 'blockquote', 'code-block', 'image'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ 'align': [] }],
+            ['clean']
+        ];
+        var quill_options = {
+             modules: {
+                toolbar:  toolbarOptions   // Snow includes toolbar by default
+            },
+            theme: 'snow'
+        };
+        var editors = {
+            content: new Quill('#user-contribute-content--post-content', quill_options),
+        };
+
+        var getRealHTML = function (editor) {
+            return editor.container.querySelector('.ql-editor').innerHTML;
+        }
+
+        var onChangeHandler = function (evt, ...args) {
+            var contentlength = this.getLength();
+        };
+
+        var editorsMap = Object.keys(editors);
+        editorsMap.forEach(function (k) {
+            editors[k].on('editor-change', function (evt, ...args) {
+                onChangeHandler.call(editors[k], [evt, args]);
+            })
+        });
+
+        $(document).ready(function () {
+            //-- prepare selectize input
+        })
+    </script>
+
+    {# --save action-- #}
+    <script>
+        var commitChanges = function (form) {
+            var fieldsOb = {};
+            var fields = $(form).serializeArray();
+            editorsMap.forEach(function (k) {
+                fields.push({name: k, value: getRealHTML(editors[k])})
+            });
+
+            fields.forEach(function (f) {
+                fieldsOb[f.name] = f.value
+            });
+
+            document.querySelectorAll('.is-invalid').forEach(function (elem) {
+                elem.classList.remove('is-invalid');
+            });
+
+            $.request('onSaveEditablePost', {
+                data: fieldsOb,
+                loading: $.oc.stripeLoadIndicator,
+                // success: function (data, status, request) {
+                //     console.log(data);
+                //     return this.options.handleFlashMessage(data.X_OCTOBER_FLASH_MESSAGES.success, 'success');
+                // },
+                // redirect: "{{ 'session-guarded/post' | page({slug:group.slug}) }}",
+                error: function (jqXHR) {
+                    if (jqXHR.status === 406) {
+                        return this.options.handleValidationMessage(
+                            jqXHR.responseJSON['X_OCTOBER_ERROR_MESSAGE'],
+                            jqXHR.responseJSON['X_OCTOBER_ERROR_FIELDS']
+                        )
+                    }
+                    this.error(jqXHR)
+                },
+                handleValidationMessage: function (message, fields) {
+                    return this.handleFlashMessage(message, 'error');
+                    // $.oc.flashMsg({text: message, class: 'error'})
+                    // alert("There was an error while processing your post: " + message);
+                },
+                handleFlashMessage: function (message, type) {
+                    $.oc.flashMsg({text: message, class: type})
+                },
+                // error: function (request, status, error) {console.log(request.responseJSON);console.log('---');
+                //     var errMessages = request.responseJSON.X_OCTOBER_ERROR_MESSAGE;
+                //     var errFields = request.responseJSON.X_OCTOBER_ERROR_FIELDS;
+                //     for (let k in errFields) {console.log(k);console.log('+++');
+                //         document.querySelector('#user-edit-field-' + k).classList.add('is-invalid');
+                //     }
+                //     $.oc.flashMsg({
+                //         'text': errMessages.join('<br>'),
+                //         'class': 'error',
+                //         'interval': 3
+                //     });
+                // }
+            });
+        };
+
+        $('#forum--form_new-user-content').on('submit', function (e) {
+            e.preventDefault();
+            commitChanges(this);
+        });
+    </script>
+{% endput %}
