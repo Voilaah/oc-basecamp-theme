@@ -10,5 +10,18 @@ postsPerPage = 20
 memberPage = 404
 channelPage = "forum/channel"
 includeStyles = 1
+
+[fileUploader]
+placeholderText = "Click or drag files to upload"
+maxSize = 2
+fileTypes = "*"
+deferredBinding = 1
+==
+<?php
+function onInit()
+{
+    $this->fileUploader->bindModel('files', new \RainLab\Forum\Models\Post);
+}
+?>
 ==
 {% component 'forumTopic' %}
